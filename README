@@ -9,7 +9,6 @@ Run the program
 python3 schedSim.py <job-file.txt> -p <ALGORITHM> -q <QUANTUM>
 
 Questions
-
 Q1: For what types of workloads does SRTN deliver the same turnaround times as FIFO?
 A1: Five tasks arrive one after another, the first one is much longer than the others.
 
