@@ -1,60 +1,97 @@
 import sys
 
-jobs = []
 alg = 'FIFO'
 quantum = 1
+processes = []
 
-class Job():
-    id = 0
-    burst_time = 0
-    arrival_time = 0
-    remaining_time = 0
-    wait_time = 0
-    turnaround_time = 0
+def print_job(jobs):
+    for job in jobs:
+        print(job[0]+' -- '+'Turnaround {:3.2f} '.format(job[1])+'Wait {:3.2f}'.format(job[2]))
 
-    def __init__(self, id, burst_time, arrival_time) -> None:
-        self.id = id
-        self.burst_time = burst_time
-        self.arrival_time = arrival_time
-        self.remaining_time = burst_time
+def print_average(jobs):
+    avg_turnaround_time = sum([job[1] for job in jobs])/len(jobs)
+    avg_wait_time = sum([job[2] for job in jobs])/len(jobs)
+    print('Average -- '+'Turnaround {:3.2f} '.format(avg_turnaround_time)+'Wait {:3.2f}'.format(avg_wait_time))
 
 def FIFO():
-    global jobs
+    global processes
+    processes = sorted(processes, key=lambda x:(x[2], x[0]))
     time = 0
-    for job in jobs:
-        job.wait_time = time
-        time += job.burst_time
-        job.turnaround_time = job.burst_time
-        print('Job '+'{:3d} -- '.format(job.id)
-            +'Turnaround {:3.2f} '.format(job.turnaround_time)
-            +'Wait {:3.2f}'.format(job.wait_time))
-    avg_turnaround_time = sum([job.turnaround_time for job in jobs])/len(jobs)
-    avg_wait_time = sum([job.wait_time for job in jobs])/len(jobs)
-    print('Average -- '+'Turnaround {:3.2f} '.format(avg_turnaround_time)
-        +'Wait {:3.2f}'.format(avg_wait_time))
+    analyzed_jobs = []
+    for i in range(len(processes)):
+        time += processes[i][1]
+        turnaround_time = time-processes[i][2]
+        waiting_time = turnaround_time-processes[i][1]
+        analyzed_job = (processes[i][0], turnaround_time, waiting_time)
+        analyzed_jobs.append(analyzed_job)
+    print_job(analyzed_jobs)
+    print_average(analyzed_jobs)
 
 def SRTN():
-    pass
-
+    global processes
+    completion_time = [0] * len(processes)
+    remaining_time = [p[1] for p in processes]
+    arrival_time = [p[2] for p in processes]
+    time = 0
+    completed = 0
+    while completed < len(processes):
+        shortest = float('inf')
+        shortest_index = -1
+        for i in range(len(processes)):
+            if arrival_time[i] <= time and remaining_time[i] < shortest and remaining_time[i] > 0:
+                shortest = remaining_time[i]
+                shortest_index = i
+        remaining_time[shortest_index] -= 1
+        time += 1
+        if remaining_time[shortest_index] == 0:
+            completion_time[shortest_index] = time
+            completed += 1
+    analyzed_jobs = []
+    for j in range(len(processes)):
+        turnaround_time = completion_time[j]-arrival_time[j]
+        waiting_time = turnaround_time - processes[j][1]
+        analyzed_job = (processes[j][0], turnaround_time, waiting_time)
+        analyzed_jobs.append(analyzed_job)
+    print_job(analyzed_jobs)
+    print_average(analyzed_jobs)
+    
 def RR():
-    pass
+    global processes, quantum
+    time = 0
+    processes = [(p[0], p[1], p[2], p[1]) for p in processes]
+    completed_processes = []
+    while processes:
+        process = processes.pop(0)
+        if process[1] > quantum:
+            time += quantum
+            processes.append((process[0], process[1]-quantum, process[2], process[3]))
+        else:
+            time += process[1]
+            turnaround_time = time-process[2]
+            waiting_time = turnaround_time-process[3]
+            completed_processes.append((process[0], turnaround_time, waiting_time))
+    print_job(completed_processes)
+    print_average(completed_processes)
 
 def main():
-    global jobs
+    global processes
     with open(sys.argv[1], 'r') as file:
         lines = file.readlines()
-        lines = [(line.split()[1], line.split()[0]) for line in lines]
+        id = 0
         for line in lines:
-            jobs.append(Job(0, int(line[1]), int(line[0])))
-        jobs = sorted(jobs, key=lambda x:x.arrival_time)
-        job_id = 0
-        for job in jobs:
-            job.id = job_id
-            job_id += 1
-    
+            line = line.split()
+            process = ('Job {:3d}'.format(id), int(line[0]), int(line[1])) # Store process id, burst time, arrival time
+            processes.append(process)
+            id += 1
+            
     if 'SRTN' in sys.argv:
         SRTN()
     elif 'RR' in sys.argv:
+        try:
+            global quantum
+            quantum = int(sys.argv[-1])
+        except ValueError:
+            print("No quantum given or invalid quantum given\nThe program will continue with quantum=1\n")
         RR()
     else:
         FIFO()
