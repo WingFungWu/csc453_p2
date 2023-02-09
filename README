@@ -6,7 +6,7 @@ Lauguage
 - python
 
 Run the program
-python3 schedSim.py <job-file.txt> -p <ALGORITHM> -q <QUANTUM>
+python3 schedSim.py <job-file.txt> <ALGORITHM> <QUANTUM>
 
 Questions
 Q1: For what types of workloads does SRTN deliver the same turnaround times as FIFO?
