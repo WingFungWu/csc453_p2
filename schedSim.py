@@ -90,6 +90,9 @@ def main():
         try:
             global quantum
             quantum = int(sys.argv[-1])
+            if quantum < 1:
+                quantum = 1
+                raise ValueError
         except ValueError:
             print("No quantum given or invalid quantum given\nThe program will continue with quantum=1\n")
         RR()
