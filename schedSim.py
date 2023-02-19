@@ -16,7 +16,7 @@ def print_average(jobs):
 def FIFO():
     global processes
     processes = sorted(processes, key=lambda x:(x[2], x[0]))
-    time = 0
+    time = min([p[2] for p in processes])
     analyzed_jobs = []
     for i in range(len(processes)):
         time += processes[i][1]
@@ -32,7 +32,7 @@ def SRTN():
     completion_time = [0] * len(processes)
     remaining_time = [p[1] for p in processes]
     arrival_time = [p[2] for p in processes]
-    time = 0
+    time = min(arrival_time)
     completed = 0
     while completed < len(processes):
         shortest = float('inf')
@@ -57,7 +57,7 @@ def SRTN():
     
 def RR():
     global processes, quantum
-    time = 0
+    time = processes[0][2]
     processes = [(p[0], p[1], p[2], p[1]) for p in processes]
     completed_processes = []
     while processes:
@@ -83,7 +83,8 @@ def main():
             process = ('Job {:3d}'.format(id), int(line[0]), int(line[1])) # Store process id, burst time, arrival time
             processes.append(process)
             id += 1
-            
+        processes = sorted(processes, key=lambda x:(x[2], x[0]))
+        
     if 'SRTN' in sys.argv:
         SRTN()
     elif 'RR' in sys.argv:
